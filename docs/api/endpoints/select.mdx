@@ -1,0 +1,125 @@
+---
+---
+
+import {
+    ParamType,
+    ParamDefault,
+    ParamWarning,
+} from '@site/src/components/labels';
+import { Examples } from '@site/src/components/examples';
+
+# 🔘 Select
+
+**Use the Select endpoint to select candidates with respect to a reference according to [text likelihood](/introduction/outputs).**
+
+Available at `http://<model_server>:<model_port>/llm/select`.
+
+---
+
+## Example request
+
+```bash
+curl -X 'POST' \
+  'http://<model_server>:<model_port>/llm/select' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'X-Model: llm-mini' \
+  -d '{"data": {"reference": "I am glad", "candidates": ["I am happy", "I am sad"]}}'
+```
+
+<details>
+<summary>Response (JSON)</summary>
+
+```json
+{
+    "request_id": "6aee2bb3-5bc0-44cc-ba7f-a3ccdda08b2b",
+    "origin": "select",
+    "outputs": [
+        {
+            "finish_reason": "length",
+            "reference": "I am glad",
+            "rankings":[
+                {
+                    "text": "I am happy",
+                    "score": {
+                        "logprob": -16.75,
+                        "normalized_logprob": -5.583333333333333,
+                        "token_logprobs":[
+                            {"I":-11.0625},
+                            {" am":-1.1953125},
+                            {" happy":-4.5}
+                        ]},
+                    "is_greedy_generation": null
+                },
+                {
+                    "text": "I am sad",
+                    "score": {
+                        "logprob": -18.125,
+                        "normalized_logprob": -6.041666666666667,
+                        "token_logprobs": [
+                            {"I":-11.125},
+                            {" am":-1.1953125},
+                            {" sad":-5.78125}
+                        ]},
+                    "is_greedy_generation":null
+                }],
+            "best":"I am happy"
+        }]
+}
+```
+
+</details>
+
+## Parameters
+
+-   `reference` <ParamType type="string" /> <ParamWarning warning="⚠️ required" />
+
+    The reference input to compute likelihood against.
+
+-   `candidates` <ParamType type="array[string]" /> <ParamWarning warning="⚠️ required" />
+
+    The input(s) that are compared to the reference and ranked based on likelihood.
+
+-   `conjunction` <ParamType type="string" /> <ParamDefault default='null' />
+
+    Expression used to link reference and candidates to create the prompt used to compute the likelihood. The prompt will have the structure `reference` + `conjunction` + `candidate`. Finding a good `conjunction` can greatly increase the performance of `select`.
+
+-   `evaluate_reference` <ParamType type="bool" /> <ParamDefault default="False" />
+
+    Evaluates the likelihood of the reference compared to the candidates, instead of the opposite.
+    You will see the `token_logprobs` of the reference in the rankings of each candidate.
+
+-   `return_is_greedy_generation` <ParamType type="bool" /> <ParamDefault default="False" />
+
+    Tells if the tokens generated are the most likely ones.
+
+    :::info Technical details
+    For instance, when analyzing the candidate `I am happy` on the reference `I am glad`, you will see a field `is_greedy_generation` with the list `[false,true,false]`.
+
+    Which means that the second analysed token - ` am` in this example - is the most probable token after the token `I`.
+    :::
+
+
+## Response (`outputs`)
+
+An array of outputs shaped like your batch.
+
+-   `reference` <ParamType type="string" />
+
+    The `reference` sentence used to compute similarities.
+
+-   `rankings` <ParamType type="array[object]" />
+
+    One entry for each member of `candidates`.
+
+    -   `text` <ParamType type="string" />
+
+        A single entry from the `candidates` sent in the request.
+
+    -   `score` <ParamType type="Score" />
+
+        A [Score](/api/specifications/responses/#score) structure
+
+-   `best` <ParamType type="string" />
+
+    The best match.

@@ -1,0 +1,39 @@
+{
+    "name": "lighton-paradigm-docs",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "docusaurus start",
+        "build": "docusaurus build",
+        "deploy": "docusaurus deploy",
+        "clear": "docusaurus clear",
+        "serve": "docusaurus serve",
+        "lint": "prettier . --write"
+    },
+    "dependencies": {
+        "@docusaurus/core": "^2.1.0",
+        "@docusaurus/preset-classic": "^2.1.0",
+        "@svgr/webpack": "^6.2.1",
+        "docusaurus": "^0.0.2",
+        "prism-react-renderer": "^1.2.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "rehype-katex": "^5.0.0",
+        "remark-math": "^3.0.0"
+    },
+    "browserslist": {
+        "production": [
+            ">0.5%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "devDependencies": {
+        "prettier": "^2.7.0"
+    }
+}

@@ -1,0 +1,80 @@
+---
+---
+
+import { Examples } from '@site/src/components/examples';
+import {
+    ParamType,
+    ParamDefault,
+    ParamWarning,
+} from '@site/src/components/labels';
+
+# ✂️ Tokenize
+
+**Use the ✂️ Tokenize endpoint to see how the models slices the text into [tokens](/introduction/tokens)**.
+
+Available at `http://<model_server>:<model_port>/llm/tokenize`.
+
+---
+
+## Example request
+
+```bash
+curl -X 'POST' \
+  'http://<model_server>:<model_port>/llm/tokenize' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'X-Model: llm-mini' \
+  -d '{"data": {"text": "Once upon a time, "}}'
+```
+
+<details>
+<summary>Response (JSON)</summary>
+
+```json
+{
+    "request_id": "44e3ef27-14d4-4eb2-9aa6-cad8212d1b8e",
+    "origin": "tokenize",
+    "outputs": [
+        {
+            "finish_reason": "length",
+            "text": "Once upon a time, ",
+            "n_tokens": 6,
+            "tokens": [
+                {"Once": 7107},
+                {" upon": 2918},
+                {" a": 241},
+                {" time": 601},
+                {",": 23},
+                {" ": 204}
+            ]
+        }]
+}
+```
+
+</details>
+
+## Parameters
+
+-   `text` <ParamType type="string" /> <ParamWarning warning="⚠️ required" />
+
+    The input that will be used by the model for generation, also known as the prompt.
+
+## Response (`outputs`)
+
+An array of outputs shaped like your batch.
+
+-   `finish_reason` <ParamType type="string" />
+
+    The reason why the model stopped processing further tokens.
+
+-   `text` <ParamType type="string" />
+
+    The input `text`.
+
+-   `n_tokens` <ParamType type="int" />
+
+    The number of tokens of the input `text`.
+
+-   `tokens` <ParamType type="array[string]" />
+
+    An array of tokens of the input `text` with their ID.

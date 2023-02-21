@@ -1,0 +1,34 @@
+name: Deploy Documentation
+
+on:
+    push:
+        branches: [master]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Use Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 'lts/*'
+                  cache: 'yarn'
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Build app
+              run: yarn build
+
+            - uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  known_hosts: 'just-a-placeholder-so-we-dont-get-errors'
+
+            - name: Upload to web server
+              run: |
+                  ssh-keyscan -p ${{ secrets.PORT }} -H ${{ secrets.DOCS_URL }} >> ~/.ssh/known_hosts  
+                  scp -o StrictHostKeyChecking=no -r -P ${{ secrets.PORT }} build/* ${{ secrets.USERNAME }}@${{ secrets.DOCS_URL }}:/home/${{ secrets.USERNAME }}/www/${{ secrets.DOCS_URL }}/public_html

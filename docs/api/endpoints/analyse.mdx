@@ -1,0 +1,79 @@
+---
+---
+
+import { Examples } from '@site/src/components/examples';
+import {
+    ParamType,
+    ParamDefault,
+    ParamWarning,
+} from '@site/src/components/labels';
+
+# 🧪 Analyse
+
+**Use the 🧪 Analyse endpoint to compute the logprobability of each token in a string.**
+
+Available at `http://<model_server>:<model_port>/llm/analyse`.
+
+---
+
+## Example request
+
+```bash
+curl -X 'POST' \
+  'http://<model_server>:<model_port>/llm/analyse' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'X-Model: llm-mini' \
+  -d '{"data": {"text": "Once upon a time in Lapland"}}'
+```
+
+<details>
+<summary>Response (JSON)</summary>
+
+```json
+{
+    "request_id": "6fe5995a-892b-417e-8b27-af1d68a6ba78",
+    "origin": "analyse",
+    "outputs": [
+        {
+            "finish_reason": "length",
+            "text": "Once upon a time in Lapland",
+            "score": {
+                "logprob": -14.0625,
+                "normalized_logprob": -2.34375,
+                "token_logprobs": [
+                    {" upon":-1.4453125},
+                    {" a":-0.0089111328125},
+                    {" time":-0.02734375},
+                    {" in":-2.703125},
+                    {" La":-8.0625},
+                    {"pland":-1.8203125}
+                ]
+            }
+        }]
+}
+```
+
+</details>
+
+## Parameters
+
+-   `text` <ParamType type="string"/> <ParamWarning warning="⚠️ required" />
+
+    The input that will be analysed.
+
+## Response (`outputs`)
+
+An array of outputs shaped like your batch.
+
+-   `finish_reason` <ParamType type="string" />
+
+    The reason why the model stopped analyzing further tokens.
+
+-   `text` <ParamType type="string" />
+
+    The text that was analysed, from the provided `text` parameter.
+
+-   `score` <ParamType type="Score" />
+
+    A [Score](/api/specifications/responses/#score) structure

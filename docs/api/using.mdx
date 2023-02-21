@@ -1,0 +1,24 @@
+---
+slug: /api
+---
+
+
+import { Alpha } from '@site/src/components/labels';
+
+# 📟 Developer documentation
+
+We currently offer two ways to query Paradigm:
+
+-   Directly through **[HTTP requests](/api/specifications/requests)**, the most flexible format to implement in your application.
+-   Through a [Python client](https://github.com/lightonai/paradigm-client).
+
+We offer a number of **endpoints** through which you can interact with Paradigm. Broadly, these are split in four categories:
+
+-   ✍️ **generate and manipulate text**: **[Create](/api/endpoints/create)** enables you to **generate and manipulate text according to a prompt**.
+    The possibilities with ✍️ **[Create](/api/endpoints/create)** are endless: from simply assisting with copywriting, to taking in complex instructions and performing arbitrary tasks (chatbots, keywords extraction, etc.)
+    This is the main gateway to Paradigm, and **we recommend you get started with this endpoint**.
+
+-   🔬 **understand natural language**: ️Endpoints that help you incorporate **natural language understanding** in your product. Leverage 🧪 **[Analyse](/api/endpoints/analyse)** to help your machine learning pipeline unlock unique insights,
+or directly use 🔘 **[Select](/api/endpoints/select)** for text classification.
+
+-   ✂️ **show the tokens**: see how the models **slices the text into [tokens](/introduction/tokens)** with the [Tokenize](/api/endpoints/tokenize) endpoint.

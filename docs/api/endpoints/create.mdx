@@ -1,0 +1,170 @@
+---
+---
+
+import { Examples } from '@site/src/components/examples';
+import {
+    ParamType,
+    ParamDefault,
+    ParamWarning,
+} from '@site/src/components/labels';
+
+# ✍️ Create
+
+**Use the ✍️ Create endpoint to write text according to a provided [prompt](/introduction/prompts)**.
+
+Available at `http://<model_server>:<model_port>/llm/create`.
+
+---
+
+## Example request
+
+```bash
+curl -X 'POST' \
+  'http://<model_server>:<model_port>/llm/create' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'X-Model: llm-mini' \
+  -d '{"data": {"text": "Once upon a time, ", "params": {"n_tokens": 25, "temperature": 1.0}}}'
+```
+
+<details>
+<summary>Response (JSON)</summary>
+
+```json
+{
+    "request_id": "c2307314-d944-4448-b9bd-be3f83911330",
+    "origin": "create",
+    "outputs": [
+        {
+            "input_text": "Once upon a time, ",
+            "completions": [
+                {
+                    "finish_reason": "length",
+                    "output_text": "in a little town on the Eastern coast of North Carolina, a family set out to build a brand based on values of "
+                }]
+        }]
+}
+```
+
+</details>
+
+## Parameters
+
+-   `text` <ParamType type="string/array[string]" /> <ParamWarning warning="⚠️ required" />
+
+    The input(s) that will be used by the model for generation, also known as the prompt. They can be provided either as a single string or as an array of strings for [batch processing](/api/specifications/requests#batching-requests).
+
+-   `params` <ParamType type="object" /> <ParamDefault default="null" />
+
+    A set of parameters to control the model output. The following parameters are supported:
+
+    -   `n_tokens` <ParamType type="int" /> <ParamDefault default="20" />
+
+        Number of [tokens](/introduction/tokens) to generate. This can be overridden by a list of `stop_words`, which will cause generation to halt when a word in such list is encountered.
+
+    :::caution Maximum content length
+    The `llm-mini` model behind Paradigm can process sequences of **2,048 tokens** at most (length of prompt + `n_tokens`). Requests overflowing this
+    maximum length will see their prompt truncated from the left to fit.
+    :::
+
+    -   `n_completions` <ParamType type="int" /> <ParamDefault default="1" />
+
+        Number of different completion proposals to return for each prompt.
+
+    ---
+
+    ### Sampling
+
+    -   `temperature` <ParamType type="float" /> <ParamDefault default="1.0" /> <ParamWarning warning="⚠️ only in topk/nucleus mode" />
+
+        How risky will the model be in its choice of tokens. A temperature of 0 corresponds to greedy sampling. we recommend a value around 1 for most creative applications, and closer to 0 when a ground truth exists. The value needs to be between 0 and 2.
+
+    -   `top_p` <ParamType type="float" /> <ParamDefault default="0.9" /> <ParamWarning warning="⚠️ only in nucleus mode" />
+
+        Total probability mass of the most likely tokens considered when sampling in nucleus mode.
+
+    ---
+
+    ### Control
+
+    -   `biases` <ParamType type="map<int, float>" /> <ParamDefault default="null" />
+
+        Bias the provided token ID to appear more or less often in the generated text.
+        Values should be comprised between -100 and +100, with negative values making words less likely to occur. Extreme
+        values such as -100 will completely forbid a word, while values between 1-5 will make the word more likely to appear.
+        We recommend playing around to find a good fit for your use case.
+
+        To get the token IDs of specific tokens, the [Tokenize](/api/endpoints/tokenize) endpoint can help you.
+
+        :::tip Repetitions
+        When generating longer samples with `biases`, the model may repeat positively biased words too often.
+        :::
+
+        :::info Technical details
+        The provided bias is directly added to the [log-likelihood](/introduction/outputs) predicted by the model at a given step, before performing the sampling operation. You can use the `return_log_probs` option or the [**Analyse**](/api/endpoints/analyse) endpoint to access the [log-probabilities](/introduction/outputs) of samples and get an idea of the range of likelihood values in your specific use case.
+
+        The bias is actually applied at the token level, and not at the word level. For words made of multiple tokens, the bias only applies to the first token (and may thus impact other words).
+        :::
+
+    -   `stop_regex` <ParamType type="re.Pattern" /> <ParamDefault default="null" />
+
+        Encountering the given regex pattern will halt generation immediately.
+
+        :::info Technical details
+        If you would prefer to give a list of strings instead of a regex pattern.
+        You can use the following Python conversion to go from a list of strings to a regex pattern expression:
+        ```python
+        import re
+
+        parameters = {"temperature": 1.0, "n_tokens": 100, "mode": "nucleus"} # base parameters
+        stop_words = [".", "\n"] # List of stopping strings to use during the generation
+        parameters["stop_regex"] = r"(?i)(" + "|".join(re.escape(word) for word in stop_words) + ")" # stop_regex parameter added to the other parameters
+        ```
+        :::
+
+    ---
+
+    ### Utilities
+
+    -   `seed` <ParamType type="int" /> <ParamDefault default="null" />
+
+        Make sampling deterministic by setting a seed used for random number generation.
+        Useful for strictly reproducing **Create** calls.
+    
+    - `echo` <ParamType type="bool" /> <ParamDefault default="False" />
+    
+       Returns the prompt in addition to the completion.
+       
+    - `prettify` <ParamType type="bool" /> <ParamDefault default="True" />
+        
+       Optimizes generations when interfacing with humans. When True: 
+         - the model does not output half words
+         - if the user input contains an incomplete word, e.g. "the capital of France is P", it would be unlikely that Paris is generated, since it's probably a token, therefore the sampling is done on tokens starting with "P".
+
+    -   `generate_stop` <ParamType type="bool" /> <ParamDefault default="True" />
+
+        This option will stop the generation if an `<endoftext>` token is produced by the model.
+
+    -   `show_special_tokens` <ParamType type="bool" /> <ParamDefault default="False" />
+
+        This option will display if special tokens are produced, this functionality is not currently exposed.
+
+## Response (`outputs`)
+
+An array of outputs shaped like your batch.
+
+-   `input_text` <ParamType type="string" />
+
+    The `text` used to generate the text.
+
+-   `completions` <ParamType type="array[object]" />
+
+    One entry for each `n_completions` requested.
+
+    -   `finish_reason` <ParamType type="string" />
+
+        The reason why the model stopped processing further tokens.
+
+    -   `output_text` <ParamType type="string" />
+
+        Text generated by the model.

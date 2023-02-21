@@ -1,0 +1,108 @@
+---
+---
+
+import { Examples } from '@site/src/components/examples';
+
+# 📟 Requests
+
+## Request format
+
+Paradigm is accessed through **`POST` HTML requests**, from the tool of your choice (`curl`, `requests`, ...).
+
+The example request below queries the ✍️ **[Create](/api/endpoints/create)** endpoint of the `llm-mini` model, with
+the prompt `Once upon a time, `, and asks for a completion of length 25 tokens (`"n_tokens": 25`).
+
+```bash
+curl -X 'POST' \
+  'http://<model_server>:<model_port>/llm/create' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -H 'X-Model: llm-mini' \
+  -d '{"data": {"text": "Once upon a time, ", "params": {"n_tokens": 25}}}'
+```
+
+Requests should follow this format:
+
+-   **Endpoint/primitive URL**: `https://<model_server>:<model_port>/llm/{endpoint}` (e.g. `create`, `select`, etc.).
+-   **JSON Payload Header**: the API works with JSON payloads only, so you should set `Content-Type: application/json` and `Accept: application/json` in your requests.
+-   **Model Header**: which model you want to query, only one model is currently available, called `llm-mini`.
+-   **JSON payload for the request**: the request and its parameters should be specified in JSON format. All endpoints usually take the main text(s) first, and then the extra parameters. **See the specific documentation of each primitive for details**.
+
+As an example, the request above will generate a response similar to the following (see 💬 **[Responses](/api/specifications/responses)**
+for more information).
+
+<details>
+<summary>Example response (JSON)</summary>
+
+```json
+{
+    "request_id": "552ba721-7f1c-4c51-8108-eb8b20579721",
+    "origin": "create",
+    "outputs": [
+        {
+            "input_text": "Once upon a time, ",
+            "completions": [
+                {
+                    "finish_reason": "length",
+                    "output_text": "there was a little girl who loved to read. She read all the time. She read in the car, she read "
+                }]
+        }]
+}
+```
+
+</details>
+
+## Batching requests
+
+If you are planning to process data in bulk, and/or to make many independent API calls, you may benefit from the
+Paradigm ability to **batch requests to the same endpoint and model**. Batching enables lower latency and faster and simplified processing.
+
+The API supports batching with the same parameters and with different parameters.
+
+```json title="Batch request payload (JSON)"
+{
+    "data": [
+        {
+            "text": "Once upon a time, ",
+            "params": {"n_tokens": 25}
+        },
+        {
+            "text": "Mars is a planet",
+            "params": {"n_tokens": 50}
+        }
+    ]
+}
+```
+
+When used with ✍️ **[Create](/api/endpoints/create)**, this will return two outputs of 25 tokens for `Once upon a time, ` and 50 tokens for `Mars is a planet`.
+
+The `outputs` list will contain one list per input text, each containing the input text and the completions together with the reason why the generation stopped.
+
+<details>
+<summary>Batched response (JSON)</summary>
+
+```json
+{
+    "request_id": "2ba4b26f-99e7-4ad4-87d5-752d818e328a",
+    "origin": "create",
+    "outputs": [
+        {
+            "input_text": "Once upon a time, ",
+            "completions": [
+                {
+                    "finish_reason": "length",
+                    "output_text": "there was a little girl who was very sad. She was sad because she had no friends. She was sad because she "
+                }]
+        },
+        {
+            "input_text": "Mars is a planet",
+            "completions": [
+                {
+                    "finish_reason": "length",
+                    "output_text": " that is very close to Earth. It is the fourth planet from the sun. Mars is also known as the red planet because of its reddish color. Mars is a very cold planet. It is also very dry. Mars has a thin "
+                }]
+        }]
+}
+```
+
+</details>
